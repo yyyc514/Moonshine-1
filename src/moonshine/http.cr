@@ -44,7 +44,7 @@ class Moonshine::Response
 			cookie_string = serialize_cookies()
 			@headers["Set-Cookie"] = cookie_string
 		end
-		return HTTP::Response.new(@status_code, @body, 
+		return HTTP::Response.new(@status_code, @body,
 			headers = @headers, version = @version)
 	end
 
@@ -63,7 +63,7 @@ class Moonshine::MiddlewareResponse
 	# Return type for request middleware
 	# if @pass_through is true the next middleware
 	# will be called. Otherwise, Response will be
-	# returned 
+	# returned
 
 	getter response
 	getter pass_through

@@ -1,5 +1,5 @@
 module Moonshine::Shortcuts
-	
+
 	# Returns a Moonshine::Response object
 	# from string
 	def ok(body)
