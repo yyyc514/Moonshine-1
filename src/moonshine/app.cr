@@ -1,5 +1,47 @@
 require "http"
 require "regex"
+require "./middleware/**"
+
+module Moonshine
+	class Router < Middleware::Base
+		def initialize(@routes: Array(Moonshine::Route))
+			@app = self
+			# @routes = [] of Moonshine::Route
+		end
+
+		def initialize(@app, opts)
+			@routes = [] of Moonshine::Route
+		end
+
+		def call(request)
+			# search @routes for matching route
+			@routes.each do |route|
+				if route.match? (request)
+					# controller found
+					request.set_params(route.get_params(request))
+					response = route.block.call(request)
+
+					# check if there's an error handler defined
+					# if response.status_code >= 400 && @error_handlers.has_key? response.status_code
+					# 	return @error_handlers[response.status_code].call(request).to_base_response
+					# end
+					return response
+				end
+			end
+			Response.new(200, "ok")
+		end
+	end
+end
+
+class SimpleHandler
+	def initialize(@app)
+	end
+
+	def call(base_request)
+		request = Moonshine::Request.new(base_request)
+		@app.call(request).to_base_response
+	end
+end
 
 class Moonshine::App
 	# Base class for Moonshine app
@@ -14,6 +56,47 @@ class Moonshine::App
 		@routes = [] of Moonshine::Route,
 		@error_handlers = {} of Int32 => Request -> Response,
 		@request_middleware = [] of Request -> MiddlewareResponse)
+
+		# @middleware = [] of Tuple
+		@middleware = [] of Tuple(Middleware::Base.class, Hash(Symbol,String))
+
+		# add_middleware Middleware::Logger
+		add_middleware Middleware::Head
+		add_middleware Middleware::Longer, {phrase: "superman"}
+		app = Router.new(@routes)
+		@middleware.reverse.each do |mw|
+			ware = mw[0] #as Middleware::Base.class
+			opts = mw[1]
+			app = ware.new(app, opts)
+			@app = app
+		end
+
+
+
+		# use Rack::Runtime
+		# use Rack::MethodOverride
+		# use ActionDispatch::RequestId
+		# use Rails::Rack::Logger
+		# use ActionDispatch::ShowExceptions
+		# use ActionDispatch::DebugExceptions
+		# use Airbrake::Rails::Middleware
+		# use ActionDispatch::RemoteIp
+		# use ActionDispatch::Callbacks
+		# use ActiveRecord::ConnectionAdapters::ConnectionManagement
+		# use ActiveRecord::QueryCache
+		# use ActionDispatch::Cookies
+		# use ActionDispatch::Session::CookieStore
+		# use ActionDispatch::Flash
+		# use SkipParamsParser
+		# use ActionDispatch::Head
+		# use Rack::ConditionalGet
+		# use Rack::ETag
+		# use ActionDispatch::BestStandardsSupport
+		# use Rack::SSL
+		# use Oink::Middleware
+		# run Raptor::Application.routes
+
+
 		@logger = Moonshine::Logger.new
 		# add default 404 handler
 		error_handler 404, do |req|
@@ -21,10 +104,16 @@ class Moonshine::App
 		end
 	end
 
+	def add_middleware(middleware, opts = {} of Symbol => String)
+		@middleware << {middleware as Middleware::Base.class, opts}
+	end
+
 	def run(port = 8000)
 		# Run the webapp on the specified port
 		puts "Moonshine serving at port #{port}..."
-		server = HTTP::Server.new(port, BaseHTTPHandler.new(@routes, @static_dirs, @error_handlers, @request_middleware))
+		# server = HTTP::Server.new(port, BaseHTTPHandler.new(@routes, @static_dirs, @error_handlers, @request_middleware))
+		server = HTTP::Server.new(port,
+			SimpleHandler.new(@app as Middleware::Base))
 		server.listen()
 	end
 
