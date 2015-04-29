@@ -8,7 +8,6 @@ module Moonshine
 
 			def call(request)
 				filepath = File.join(@path, request.path)
-				puts filepath
 				if File.exists?(filepath)
 					resp = Moonshine::Response.new(200, File.read(filepath))
 					resp.headers["Content-Type"] = mime_type(filepath)

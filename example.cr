@@ -5,7 +5,7 @@ include Moonshine::Shortcuts
 viewcount = 0
 
 app = Moonshine::App.new
-app.router.get "/", do |request|
+app.routes.get "/", do |request|
 	viewcount += 1
 	html = "
 		<html>
@@ -19,7 +19,7 @@ app.router.get "/", do |request|
 	ok(html)
 end
 
-app.router.get "/api", do |request|
+app.routes.get "/api", do |request|
 	res = ok("{ name : 'moonshine'}")
 	res.headers["Content-type"] = "text/json"
 	res

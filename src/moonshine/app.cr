@@ -5,8 +5,6 @@ require "./middleware/**"
 
 class Moonshine::App
 	# Base class for Moonshine app
-	getter server
-	getter router
 	getter logger
 	getter static_dirs
 
@@ -62,9 +60,9 @@ class Moonshine::App
 
 	def run(port = 8000)
 		# Run the webapp on the specified port
-		puts "Moonshine serving at port #{port}..."
-		server = HTTP::Server.new(port,
-			SimpleHandler.new(build_app))
+		puts "Moonshine v#{Moonshine::VERSION}"
+		puts " - Serving at http://0.0.0.0:#{port}/"
+		server = HTTP::Server.new(port, CrystalHTTPWrapper.new(build_app))
 		server.listen()
 	end
 
@@ -101,7 +99,7 @@ class Moonshine::App
 end
 
 
-class SimpleHandler
+class CrystalHTTPWrapper
 	def initialize(@app)
 	end
 
