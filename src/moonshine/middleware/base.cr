@@ -5,9 +5,6 @@ module Moonshine
 				@app = self
 			end
 
-			# def initialize(@app, @opts = {} of String => Class)
-			# end
-
 			def wrap(app)
 				@app = app
 				self

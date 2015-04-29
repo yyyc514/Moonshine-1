@@ -25,8 +25,7 @@ end
 
 class Moonshine::Response
 	getter status_code
-	getter body
-	setter body
+	property body
 	getter headers
 	getter cookies
 	setter cookies

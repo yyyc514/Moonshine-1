@@ -3,21 +3,23 @@ module Moonshine
 
 		def initialize()
 			@routes = [] of Moonshine::Route
-			@error_handlers = {} of Int32 => Request -> Response
-			@error_handlers[404] = ->(request : Request) { Response.new(404, "Not found")}
-			@app = self
+			# @error_handlers = {} of Int32 => Request -> Response
+			# @error_handlers[404] = ->(request : Request) { Response.new(404, "Not found")}
+		end
+
+		def route(regex, &block : Moonshine::Request -> Moonshine::Response)
+			any(regex, &block)
 		end
 
 		# Add route for all methods to the app
 		# Takes in regex pattern and block
-		def route(regex, &block : Moonshine::Request -> Moonshine::Response)
+		def any(regex, &block : Moonshine::Request -> Moonshine::Response)
 			methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
 			methods.each do |method|
 				@routes.push Moonshine::Route.new(method, regex,
 					block)
 			end
 		end
-
 
 		# methods for adding routes for individual
 		# HTTP verbs
@@ -44,7 +46,8 @@ module Moonshine
 				end
 			end
 			# 404, file is not found
-			@error_handlers[404].call(request)
+			Response.new(404, "Not Found")
+			# @error_handlers[404].call(request)
 		end
 	end
 

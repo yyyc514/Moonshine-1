@@ -17,7 +17,7 @@ class Moonshine::App
 		@request_middleware = [] of Request -> MiddlewareResponse)
 
 		@middleware = [] of Middleware::Base
-		setup_middleware
+		default_middleware
 		@router = Router.new()
 
 
@@ -52,13 +52,29 @@ class Moonshine::App
 		end
 	end
 
-	def setup_middleware
-		# add_middleware Middleware::Logger
+	def routes
+		@router
+	end
+
+	def add_middleware(middleware)
+		@middleware << middleware
+	end
+
+	def run(port = 8000)
+		# Run the webapp on the specified port
+		puts "Moonshine serving at port #{port}..."
+		server = HTTP::Server.new(port,
+			SimpleHandler.new(build_app))
+		server.listen()
+	end
+
+	private def default_middleware
+		add_middleware Middleware::Logger.new
 		add_middleware Middleware::Head.new
 		add_middleware Middleware::Longer.new(phrase: "superman")
 	end
 
-	def build_app
+	private def build_app
 		@static_dirs.each do |dir|
 			add_middleware Middleware::StaticFiles.new(dir)
 		end
@@ -70,18 +86,6 @@ class Moonshine::App
 		app
 	end
 
-	def add_middleware(middleware)
-		@middleware << middleware
-	end
-
-	def run(port = 8000)
-		# Run the webapp on the specified port
-		puts "Moonshine serving at port #{port}..."
-		# server = HTTP::Server.new(port, BaseHTTPHandler.new(@routes, @static_dirs, @error_handlers, @request_middleware))
-		server = HTTP::Server.new(port,
-			SimpleHandler.new(build_app as Middleware::Base))
-		server.listen()
-	end
 
 
 	##
