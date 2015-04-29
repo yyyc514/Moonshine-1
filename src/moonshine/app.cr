@@ -2,75 +2,23 @@ require "http"
 require "regex"
 require "./middleware/**"
 
-module Moonshine
-	class Router < Middleware::Base
-		def initialize(@routes: Array(Moonshine::Route))
-			@app = self
-			# @routes = [] of Moonshine::Route
-		end
-
-		def initialize(@app, opts)
-			@routes = [] of Moonshine::Route
-		end
-
-		def call(request)
-			# search @routes for matching route
-			@routes.each do |route|
-				if route.match? (request)
-					# controller found
-					request.set_params(route.get_params(request))
-					response = route.block.call(request)
-
-					# check if there's an error handler defined
-					# if response.status_code >= 400 && @error_handlers.has_key? response.status_code
-					# 	return @error_handlers[response.status_code].call(request).to_base_response
-					# end
-					return response
-				end
-			end
-			Response.new(200, "ok")
-		end
-	end
-end
-
-class SimpleHandler
-	def initialize(@app)
-	end
-
-	def call(base_request)
-		request = Moonshine::Request.new(base_request)
-		@app.call(request).to_base_response
-	end
-end
 
 class Moonshine::App
 	# Base class for Moonshine app
 	getter server
-	getter routes
+	getter router
 	getter logger
 	getter static_dirs
 
 
 	def initialize(
 		@static_dirs = [] of String,
-		@routes = [] of Moonshine::Route,
 		@error_handlers = {} of Int32 => Request -> Response,
 		@request_middleware = [] of Request -> MiddlewareResponse)
 
 		# @middleware = [] of Tuple
 		@middleware = [] of Tuple(Middleware::Base.class, Hash(Symbol,String))
-
-		# add_middleware Middleware::Logger
-		add_middleware Middleware::Head
-		add_middleware Middleware::Longer, {phrase: "superman"}
-		app = Router.new(@routes)
-		@middleware.reverse.each do |mw|
-			ware = mw[0] #as Middleware::Base.class
-			opts = mw[1]
-			app = ware.new(app, opts)
-			@app = app
-		end
-
+		@router = Router.new()
 
 
 		# use Rack::Runtime
@@ -104,6 +52,20 @@ class Moonshine::App
 		end
 	end
 
+	def build_app
+		# add_middleware Middleware::Logger
+		add_middleware Middleware::Head
+		add_middleware Middleware::Longer, {phrase: "superman"}
+		app = @router
+		@middleware.reverse.each do |mw|
+			ware = mw[0] #as Middleware::Base.class
+			opts = mw[1]
+			app = ware.new(app, opts)
+			@app = app
+		end
+		@app
+	end
+
 	def add_middleware(middleware, opts = {} of Symbol => String)
 		@middleware << {middleware as Middleware::Base.class, opts}
 	end
@@ -113,19 +75,10 @@ class Moonshine::App
 		puts "Moonshine serving at port #{port}..."
 		# server = HTTP::Server.new(port, BaseHTTPHandler.new(@routes, @static_dirs, @error_handlers, @request_middleware))
 		server = HTTP::Server.new(port,
-			SimpleHandler.new(@app as Middleware::Base))
+			SimpleHandler.new(build_app as Middleware::Base))
 		server.listen()
 	end
 
-	# Add route for all methods to the app
-	# Takes in regex pattern and block
-	def route(regex, &block : Moonshine::Request -> Moonshine::Response)
-		methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
-		methods.each do |method|
-			@routes.push Moonshine::Route.new(method, regex,
-				block)
-		end
-	end
 
 	##
 	# Add request handler. If handler returns a
@@ -146,13 +99,17 @@ class Moonshine::App
 		@static_dirs << path
 	end
 
-	# methods for adding routes for individual
-	# HTTP verbs
-	{% for method in %w(get post put delete patch) %}
-		def {{method.id}}(path, &block : Moonshine::Request -> Moonshine::Response)
-			@routes << Moonshine::Route.new("{{method.id}}".upcase, path.to_s, block)
-		end
-	{% end %}
+end
+
+
+class SimpleHandler
+	def initialize(@app)
+	end
+
+	def call(base_request)
+		request = Moonshine::Request.new(base_request)
+		@app.call(request).to_base_response
+	end
 end
 
 
