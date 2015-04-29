@@ -13,8 +13,7 @@ class Moonshine::App
 
 	def initialize(
 		@static_dirs = [] of String,
-		@error_handlers = {} of Int32 => Request -> Response,
-		@request_middleware = [] of Request -> MiddlewareResponse)
+		@error_handlers = {} of Int32 => Request -> Response)
 
 		@middleware = [] of Middleware::Base
 		default_middleware
@@ -56,6 +55,7 @@ class Moonshine::App
 		@router
 	end
 
+	# add middleware to our middleware stack
 	def add_middleware(middleware)
 		@middleware << middleware
 	end
@@ -86,15 +86,6 @@ class Moonshine::App
 		app
 	end
 
-
-
-	##
-	# Add request handler. If handler returns a
-	# response, no further handlers are called.
-	# If nil is returned, the next handler is run
-	def request_middleware(&block : Request -> MiddlewareResponse)
-		@request_middleware << block
-	end
 
 	# Add handler for given error code
 	# multiple calls for the same error code result
