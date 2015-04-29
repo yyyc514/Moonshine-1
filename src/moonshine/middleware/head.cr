@@ -1,23 +1,13 @@
 module Moonshine
 	module Middleware
 		class Head < Base
-			def initialize(@app, opts)
-			end
 
 			def call(request)
+				is_head_request = request.method == "HEAD"
+				request.method = "GET"
 				@app.call(request).tap do |r|
-					r.body = "" if request.method == "HEAD"
-				end
-			end
-		end
-
-		class Longer < Base
-			def initialize(@app, @opts)
-			end
-
-			def call(request)
-				@app.call(request).tap do |r|
-					r.body += @opts[:phrase]
+					# TODO: fix HTTP::Response rewriting content length
+					r.body = "" if is_head_request
 				end
 			end
 		end

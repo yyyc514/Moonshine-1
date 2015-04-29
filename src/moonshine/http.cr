@@ -4,7 +4,7 @@ require "time"
 class Moonshine::Request
 	getter params
 	getter path
-	getter method
+	property method
 	getter version
 	getter body
 	getter headers

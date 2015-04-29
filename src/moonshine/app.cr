@@ -16,8 +16,8 @@ class Moonshine::App
 		@error_handlers = {} of Int32 => Request -> Response,
 		@request_middleware = [] of Request -> MiddlewareResponse)
 
-		# @middleware = [] of Tuple
-		@middleware = [] of Tuple(Middleware::Base.class, Hash(Symbol,String))
+		@middleware = [] of Middleware::Base
+		setup_middleware
 		@router = Router.new()
 
 
@@ -52,22 +52,26 @@ class Moonshine::App
 		end
 	end
 
-	def build_app
+	def setup_middleware
 		# add_middleware Middleware::Logger
-		add_middleware Middleware::Head
-		add_middleware Middleware::Longer, {phrase: "superman"}
-		app = @router
-		@middleware.reverse.each do |mw|
-			ware = mw[0] #as Middleware::Base.class
-			opts = mw[1]
-			app = ware.new(app, opts)
-			@app = app
-		end
-		@app
+		add_middleware Middleware::Head.new
+		add_middleware Middleware::Longer.new(phrase: "superman")
 	end
 
-	def add_middleware(middleware, opts = {} of Symbol => String)
-		@middleware << {middleware as Middleware::Base.class, opts}
+	def build_app
+		@static_dirs.each do |dir|
+			add_middleware Middleware::StaticFiles.new(dir)
+		end
+
+		app = @router
+		@middleware.reverse.each do |ware|
+			app = ware.wrap(app)
+		end
+		app
+	end
+
+	def add_middleware(middleware)
+		@middleware << middleware
 	end
 
 	def run(port = 8000)

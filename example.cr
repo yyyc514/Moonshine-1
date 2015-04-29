@@ -24,4 +24,5 @@ app.router.get "/api", do |request|
 	res.headers["Content-type"] = "text/json"
 	res
 end
+# app.add_static_dir(".")
 app.run()

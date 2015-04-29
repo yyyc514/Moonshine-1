@@ -1,15 +1,11 @@
 module Moonshine
-	class Router < Middleware::Base
+	class Router
 
 		def initialize()
 			@routes = [] of Moonshine::Route
 			@error_handlers = {} of Int32 => Request -> Response
 			@error_handlers[404] = ->(request : Request) { Response.new(404, "Not found")}
 			@app = self
-		end
-
-		def initialize(@app, opts)
-			initialize()
 		end
 
 		# Add route for all methods to the app
