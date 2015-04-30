@@ -4,6 +4,23 @@ include Moonshine::Shortcuts
 
 viewcount = 0
 
+
+class PostController < Moonshine::Controller
+
+	def index
+		render "index"
+	end
+
+	def show
+		render "show"
+	end
+
+	add_template :index
+	add_template :show
+
+end
+
+
 app = Moonshine::App.new
 app.routes.get "/", do |request|
 	viewcount += 1
@@ -17,6 +34,14 @@ app.routes.get "/", do |request|
 		</html>
 	"
 	ok(html)
+end
+
+app.routes.draw do
+	get "/posts" do |request|
+		c = PostController.new(request)
+		c.index()
+		c.return_response
+	end
 end
 
 app.routes.get "/api", do |request|

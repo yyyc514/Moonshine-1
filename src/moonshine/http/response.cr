@@ -1,11 +1,13 @@
+require "http"
+
 class Moonshine::Response
-	getter status_code
-	property body
+	property status_code
+	# property body
 	getter headers
 	getter cookies
 	setter cookies
 
-	def initialize(@status_code, @body, @version = "HTTP/1.1", @cookies = {} of String => String)
+	def initialize(@status_code, @body = "", @version = "HTTP/1.1", @cookies = {} of String => String)
 		@headers = HTTP::Headers.new
 	end
 
@@ -13,6 +15,17 @@ class Moonshine::Response
 		@headers[key] = value
 	end
 
+	def body
+		@body
+	end
+
+	def body=(x : Nil)
+		@body = ""
+	end
+
+	def body=(x: String)
+		@body = x
+	end
 
 	def to_base_response()
 		unless @cookies.empty?

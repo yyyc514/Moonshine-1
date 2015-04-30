@@ -1,6 +1,6 @@
-require "http"
 require "regex"
 require "./middleware/**"
+require "./http/**"
 
 
 class Moonshine::App

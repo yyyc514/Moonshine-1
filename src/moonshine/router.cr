@@ -7,6 +7,10 @@ module Moonshine
 			# @error_handlers[404] = ->(request : Request) { Response.new(404, "Not found")}
 		end
 
+		def draw(&block)
+			with self yield
+		end
+
 		def route(regex, &block : Moonshine::Request -> Moonshine::Response)
 			any(regex, &block)
 		end
