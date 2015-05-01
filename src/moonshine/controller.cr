@@ -10,7 +10,7 @@ abstract class Moonshine::Controller
 
 	macro add_template(name)
 		def render_{{name.id}}
-			"{{name.id}}"
+			"<h1>{{name.id}}</h1>"
 		end
 	end
 
@@ -24,8 +24,16 @@ abstract class Moonshine::Controller
 	end
 
 	def return_response
-		@response.body = @template_rendered
+		if @response.body == ""
+			@response.body = @template_rendered
+		end
 		@response
+	end
+
+	def redirect_to(url, code = 301)
+		status code
+		@response.headers["Location"] = url
+		@response.body = "Moved to #{url}"
 	end
 
 	# Returns a response object with HTTP Okay

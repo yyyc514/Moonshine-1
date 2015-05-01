@@ -25,6 +25,10 @@ module Moonshine
 			end
 		end
 
+		def get(path : String,  routine : Moonshine::Request -> Moonshine::Response)
+			get path, &routine
+		end
+
 		# methods for adding routes for individual
 		# HTTP verbs
 		{% for method in %w(get post put delete patch) %}
@@ -32,7 +36,6 @@ module Moonshine
 				@routes << Moonshine::Route.new("{{method.id}}".upcase, path.to_s, block)
 			end
 		{% end %}
-
 
 		def call(request)
 			# search @routes for matching route
@@ -53,6 +56,17 @@ module Moonshine
 			Response.new(404, "Not Found")
 			# @error_handlers[404].call(request)
 		end
+
+		# helpers
+
+		def redirect_to(url, code = 301)
+			-> (request : Moonshine::Request ) {
+				res = Moonshine::Response.new(code, "Moved")
+				res.headers["Location"] = url
+				res
+			}
+		end
+
 	end
 
 end

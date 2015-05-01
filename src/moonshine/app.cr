@@ -69,6 +69,7 @@ class Moonshine::App
 	private def default_middleware
 		add_middleware Middleware::Logger.new
 		add_middleware Middleware::Head.new
+		add_middleware Middleware::Session.new
 		add_middleware Middleware::Longer.new(phrase: "superman")
 	end
 

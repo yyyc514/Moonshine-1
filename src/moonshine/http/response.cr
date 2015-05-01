@@ -39,7 +39,7 @@ class Moonshine::Response
 	def serialize_cookies()
 		cookie_string = ""
 		@cookies.each do |key, value|
-			cookie_string += key + "=" + value + ", "
+			cookie_string += key + "=" + Utils.escape(value) + ", "
 		end
 		cookie_string = cookie_string[0..-2]
 		cookie_string
